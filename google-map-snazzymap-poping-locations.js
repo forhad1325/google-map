@@ -1,11 +1,13 @@
 jQuery(document).ready(function ($) {
     let map;
     let markers = [];
+    let maxZoom = 16; // Define max zoom level as a variable
 
     function initMap() {
         map = new google.maps.Map(document.getElementById("location_pin_popup_map"), {
             center: { lat: 28.1360069, lng: -96.9786523 }, // Default center
-            zoom: 6,
+            zoom: 12,
+            maxZoom: maxZoom, // Use maxZoom variable
             styles: [
                 {
                     "featureType": "landscape.natural",
@@ -44,7 +46,7 @@ jQuery(document).ready(function ($) {
             let latitudes = String($(this).data("lat")).split(",");
             let longitudes = String($(this).data("lng")).split(",");
             let title = $(this).find(".elementor-icon-box-title").text().trim() || "Location";
-            let markerGroup = []; // Store markers for each location
+            let markerGroup = [];
 
             if (latitudes.length === longitudes.length) {
                 for (let i = 0; i < latitudes.length; i++) {
@@ -64,30 +66,39 @@ jQuery(document).ready(function ($) {
                 }
             }
 
-            // Click event to pan to all locations associated with this element
             $(this).on("click", function () {
                 let bounds = new google.maps.LatLngBounds();
-                
-                // Stop all animations
+
                 markers.forEach(m => m.setAnimation(null));
 
-                // Set map view to show all locations from this element
                 markerGroup.forEach(marker => {
                     bounds.extend(marker.getPosition());
-                    marker.setAnimation(google.maps.Animation.BOUNCE); // Bounce effect
+                    marker.setAnimation(google.maps.Animation.BOUNCE);
                     setTimeout(() => marker.setAnimation(null), 2000);
                 });
 
-                // Fit map to bounds smoothly
                 map.fitBounds(bounds);
+
+                // Ensure max zoom level is respected
+                google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+                    if (map.getZoom() > maxZoom) {
+                        map.setZoom(maxZoom);
+                    }
+                });
             });
         });
 
-        // Adjust the map view to show all markers initially
         if (markers.length > 0) {
             let bounds = new google.maps.LatLngBounds();
             markers.forEach(marker => bounds.extend(marker.getPosition()));
             map.fitBounds(bounds);
+
+            // Ensure max zoom level is respected
+            google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+                if (map.getZoom() > maxZoom) {
+                    map.setZoom(maxZoom);
+                }
+            });
         }
     }
 
