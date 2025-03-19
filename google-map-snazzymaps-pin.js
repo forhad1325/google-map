@@ -21,7 +21,7 @@ jQuery(document).ready(function ($) {
 
             let map = new google.maps.Map(this, {
                 center: { lat: latArray[0], lng: lngArray[0] }, // Default to first location
-                zoom: 12, // Adjust zoom level as needed
+                zoom: 12, // Default zoom for single locations
                 styles: [
                     {
                         "featureType": "landscape.natural",
@@ -57,6 +57,7 @@ jQuery(document).ready(function ($) {
             });
 
             let bounds = new google.maps.LatLngBounds();
+            let markers = [];
 
             latArray.forEach((lat, i) => {
                 let lng = lngArray[i];
@@ -68,12 +69,20 @@ jQuery(document).ready(function ($) {
                     title: "Location " + (i + 1),
                 });
 
+                markers.push(marker);
                 bounds.extend(marker.getPosition());
             });
 
-            // If more than one location, fit map to bounds
+            // Adjust zoom dynamically if multiple locations exist
             if (latArray.length > 1) {
                 map.fitBounds(bounds);
+
+                // Fine-tune zoom level to avoid too much zoom-out
+                google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+                    if (map.getZoom() > 15) {
+                        map.setZoom(15); // Limit zoom-in if markers are close
+                    }
+                });
             }
         });
     }
